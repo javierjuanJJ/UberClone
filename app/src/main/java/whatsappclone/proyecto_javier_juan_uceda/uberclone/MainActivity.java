@@ -9,7 +9,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import whatsappclone.proyecto_javier_juan_uceda.uberclone.Utils.GoToScreen;
 
-public class MainActivity extends AppCompatActivity implements View.OnClickListener {
+public class MainActivity extends GoToScreen implements View.OnClickListener {
 
     private Button btnDriver, btnCustomer;
 
@@ -40,9 +40,5 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
-    public void goToScreen(android.content.Context activity, Class<?> destinatation) {
-        Intent intent = new Intent(activity, destinatation);
-        startActivity(intent);
-        finish();
-    }
+
 }

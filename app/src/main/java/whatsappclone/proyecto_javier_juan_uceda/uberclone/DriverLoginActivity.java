@@ -21,7 +21,7 @@ import com.google.firebase.database.FirebaseDatabase;
 
 import whatsappclone.proyecto_javier_juan_uceda.uberclone.Utils.GoToScreen;
 
-public class DriverLoginActivity extends AppCompatActivity implements View.OnClickListener {
+public class DriverLoginActivity extends GoToScreen implements View.OnClickListener {
 
     private Button btnLogin, btnRegister;
     private EditText etEmail, etPassword;
@@ -110,11 +110,5 @@ public class DriverLoginActivity extends AppCompatActivity implements View.OnCli
     protected void onStop() {
         super.onStop();
         mAuth.removeAuthStateListener(firebaseAuthListener);
-    }
-
-    public void goToScreen(android.content.Context activity, Class<?> destinatation) {
-        Intent intent = new Intent(activity, destinatation);
-        startActivity(intent);
-        finish();
     }
 }

@@ -4,6 +4,10 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Intent;
 
-public class GoToScreen {
-
+public abstract class GoToScreen extends AppCompatActivity{
+    public void goToScreen(android.content.Context activity, Class<?> destination) {
+        Intent intent = new Intent(activity, destination);
+        startActivity(intent);
+        finish();
+    }
 }

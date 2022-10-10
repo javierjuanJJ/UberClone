@@ -19,7 +19,9 @@ import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
-public class CustomerLoginActivity extends AppCompatActivity implements View.OnClickListener {
+import whatsappclone.proyecto_javier_juan_uceda.uberclone.Utils.GoToScreen;
+
+public class CustomerLoginActivity extends GoToScreen implements View.OnClickListener {
 
     private Button btnLogin, btnRegister;
     private EditText etEmail, etPassword;
@@ -108,12 +110,6 @@ public class CustomerLoginActivity extends AppCompatActivity implements View.OnC
     protected void onStop() {
         super.onStop();
         mAuth.removeAuthStateListener(firebaseAuthListener);
-    }
-
-    public void goToScreen(android.content.Context activity, Class<?> destinatation) {
-        Intent intent = new Intent(activity, destinatation);
-        startActivity(intent);
-        finish();
     }
 
 }
