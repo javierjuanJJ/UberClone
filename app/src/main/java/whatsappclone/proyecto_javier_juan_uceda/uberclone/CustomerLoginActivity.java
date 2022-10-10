@@ -56,9 +56,7 @@ public class CustomerLoginActivity extends AppCompatActivity implements View.OnC
             public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
                 FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
                 if (user != null) {
-                    Intent intent = new Intent(CustomerLoginActivity.this, MapActivity.class);
-                    startActivity(intent);
-                    finish();
+                    goToScreen(CustomerLoginActivity.this, MapActivity.class);
                 }
             }
         };
@@ -111,4 +109,11 @@ public class CustomerLoginActivity extends AppCompatActivity implements View.OnC
         super.onStop();
         mAuth.removeAuthStateListener(firebaseAuthListener);
     }
+
+    public void goToScreen(android.content.Context activity, Class<?> destinatation) {
+        Intent intent = new Intent(activity, destinatation);
+        startActivity(intent);
+        finish();
+    }
+
 }

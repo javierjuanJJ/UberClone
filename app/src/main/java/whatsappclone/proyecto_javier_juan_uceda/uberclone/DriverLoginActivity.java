@@ -19,6 +19,8 @@ import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
+import whatsappclone.proyecto_javier_juan_uceda.uberclone.Utils.GoToScreen;
+
 public class DriverLoginActivity extends AppCompatActivity implements View.OnClickListener {
 
     private Button btnLogin, btnRegister;
@@ -56,9 +58,7 @@ public class DriverLoginActivity extends AppCompatActivity implements View.OnCli
             public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
                 FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
                 if (user != null) {
-                    Intent intent = new Intent(DriverLoginActivity.this, MapActivity.class);
-                    startActivity(intent);
-                    finish();
+                    goToScreen(DriverLoginActivity.this, DriverMapActivity.class);
                 }
             }
         };
@@ -110,5 +110,11 @@ public class DriverLoginActivity extends AppCompatActivity implements View.OnCli
     protected void onStop() {
         super.onStop();
         mAuth.removeAuthStateListener(firebaseAuthListener);
+    }
+
+    public void goToScreen(android.content.Context activity, Class<?> destinatation) {
+        Intent intent = new Intent(activity, destinatation);
+        startActivity(intent);
+        finish();
     }
 }

@@ -1,11 +1,13 @@
 package whatsappclone.proyecto_javier_juan_uceda.uberclone;
 
-import androidx.appcompat.app.AppCompatActivity;
-
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
+
+import androidx.appcompat.app.AppCompatActivity;
+
+import whatsappclone.proyecto_javier_juan_uceda.uberclone.Utils.GoToScreen;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
@@ -28,17 +30,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     @Override
     public void onClick(View view) {
-        switch (view.getId()){
+        switch (view.getId()) {
             case R.id.customer:
-                goToScreen(MainActivity.this,CustomerLoginActivity.class);
+                goToScreen(MainActivity.this, CustomerLoginActivity.class);
                 break;
             case R.id.driver:
-                goToScreen(MainActivity.this,DriverLoginActivity.class);
+                goToScreen(MainActivity.this, DriverLoginActivity.class);
                 break;
         }
     }
 
-    private void goToScreen(android.content.Context activity,  Class<?> destinatation) {
+    public void goToScreen(android.content.Context activity, Class<?> destinatation) {
         Intent intent = new Intent(activity, destinatation);
         startActivity(intent);
         finish();
