@@ -26,11 +26,18 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import whatsappclone.proyecto_javier_juan_uceda.uberclone.Utils.GoToScreen2;
 import whatsappclone.proyecto_javier_juan_uceda.uberclone.databinding.ActivityDriverMapBinding;
@@ -44,6 +51,7 @@ public class CostumerMapActivity extends GoToScreen2 implements OnMapReadyCallba
     private LocationRequest mLocationRequest;
     private Button btnLogout, btnRequest;
     private LatLng pickupLocation;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -69,7 +77,11 @@ public class CostumerMapActivity extends GoToScreen2 implements OnMapReadyCallba
 
         btnRequest = findViewById(R.id.btnRequest);
         btnRequest.setOnClickListener(this);
+
+
     }
+
+
 
     /**
      * Manipulates the map once available.
@@ -201,6 +213,13 @@ public class CostumerMapActivity extends GoToScreen2 implements OnMapReadyCallba
             public void onKeyEntered(String key, GeoLocation location) {
                 driverFound = true;
                 driverFoundID = key;
+                DatabaseReference driverRef = FirebaseDatabase.getInstance().getReference().child("Users").child("Drivers").child(driverFoundID);
+                String customerId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+                HashMap map = new HashMap();
+                map.put("customerRiderId",customerId);
+                driverRef.updateChildren(map);
+                getDriveLocation();
+                btnRequest.setText(R.string.btnRequestLookingFor);
             }
 
             @Override
@@ -223,6 +242,44 @@ public class CostumerMapActivity extends GoToScreen2 implements OnMapReadyCallba
 
             @Override
             public void onGeoQueryError(DatabaseError error) {
+
+            }
+        });
+    }
+
+    private Marker driverMarker;
+
+    private void getDriveLocation() {
+        DatabaseReference driverRef = FirebaseDatabase.getInstance().getReference().child("driversWorking").child(driverFoundID).child("1");
+        driverRef.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                if (snapshot.exists()) {
+                    List<Object> map = (List<Object>) snapshot.getValue();
+                    double locationLat = 0.0;
+                    double locationLong = 0.0;
+                    btnRequest.setText(R.string.btnRequestDriverFound);
+                    if (map.get(0) != null) {
+                        locationLat = Double.parseDouble(map.get(0).toString());
+                    }
+
+                    if (map.get(1) != null) {
+                        locationLong = Double.parseDouble(map.get(1).toString());
+                    }
+
+                    LatLng driverLatLong = new LatLng(locationLat, locationLong);
+
+                    if (driverMarker != null) {
+                        driverMarker.remove();
+                    }
+
+                    driverMarker = mMap.addMarker(new MarkerOptions().position(driverLatLong).title(getString(R.string.yourDrive)));
+
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
 
             }
         });
