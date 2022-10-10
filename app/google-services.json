@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "855553655268",
+    "project_id": "uberclone-f6af2",
+    "storage_bucket": "uberclone-f6af2.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:855553655268:android:362e09b90d4dcd12cb87f1",
+        "android_client_info": {
+          "package_name": "whatsappclone.proyecto_javier_juan_uceda.uberclone"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "855553655268-t3blq3equg48cdokmo3f2j46utv9171j.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "whatsappclone.proyecto_javier_juan_uceda.uberclone",
+            "certificate_hash": "d856537376d0cfc4f402ab00d7c23e6224223d00"
+          }
+        },
+        {
+          "client_id": "855553655268-243b7qsejq723c5duf1tv437d8kcaqac.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAuBhiVeG3C8zoeqv084NiETZ8qB40lE08"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "855553655268-243b7qsejq723c5duf1tv437d8kcaqac.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
