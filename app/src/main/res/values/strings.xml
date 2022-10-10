@@ -9,4 +9,8 @@
     <string name="btndriver">I\'m a driver</string>
     <string name="btnCustomer">I\'m a customer</string>
     <string name="title_activity_driver_map">DriverMapActivity</string>
+    <string name="btnLogout">Logout</string>
+    <string name="btnCallUber">Call uber</string>
+    <string name="btnRequestDriver">\"Getting your driver... \"</string>
+    <string name="pickupHere">Pickup here</string>
 </resources>

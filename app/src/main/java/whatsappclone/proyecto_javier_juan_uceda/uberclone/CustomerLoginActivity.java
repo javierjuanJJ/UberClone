@@ -58,7 +58,7 @@ public class CustomerLoginActivity extends GoToScreen implements View.OnClickLis
             public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
                 FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
                 if (user != null) {
-                    goToScreen(CustomerLoginActivity.this, MapActivity.class);
+                    goToScreen(CustomerLoginActivity.this, CostumerMapActivity.class);
                 }
             }
         };

@@ -1,17 +1,16 @@
 package whatsappclone.proyecto_javier_juan_uceda.uberclone;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+
 import android.Manifest;
-import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.core.app.ActivityCompat;
-import androidx.fragment.app.FragmentActivity;
 
 import com.firebase.geofire.GeoFire;
 import com.firebase.geofire.GeoLocation;
@@ -25,6 +24,7 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
@@ -32,21 +32,25 @@ import com.google.firebase.database.FirebaseDatabase;
 import whatsappclone.proyecto_javier_juan_uceda.uberclone.Utils.GoToScreen2;
 import whatsappclone.proyecto_javier_juan_uceda.uberclone.databinding.ActivityDriverMapBinding;
 
-public class DriverMapActivity extends GoToScreen2 implements OnMapReadyCallback, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, LocationListener, View.OnClickListener {
+public class CostumerMapActivity extends GoToScreen2 implements OnMapReadyCallback, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, LocationListener, View.OnClickListener {
 
     private GoogleMap mMap;
     private ActivityDriverMapBinding binding;
     private GoogleApiClient mGoogleApiClient;
     private Location mLastLocation;
     private LocationRequest mLocationRequest;
-    private Button btnLogout;
+    private Button btnLogout, btnRequest;
+    private LatLng pickupLocation;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_costumer_map);
 
-        binding = ActivityDriverMapBinding.inflate(getLayoutInflater());
-        setContentView(binding.getRoot());
+
+//        binding = ActivityDriverMapBinding.inflate(getLayoutInflater());
+        //setContentView(binding.getRoot());
+        //setContentView(R.layout.activity_costumer_map);
 
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
@@ -59,6 +63,9 @@ public class DriverMapActivity extends GoToScreen2 implements OnMapReadyCallback
     private void setUI() {
         btnLogout = findViewById(R.id.logoout);
         btnLogout.setOnClickListener(this);
+
+        btnRequest = findViewById(R.id.btnRequest);
+        btnRequest.setOnClickListener(this);
     }
 
     /**
@@ -103,25 +110,13 @@ public class DriverMapActivity extends GoToScreen2 implements OnMapReadyCallback
         mMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
         mMap.animateCamera(CameraUpdateFactory.zoomTo(11));
 
-
-        String userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
-        DatabaseReference ref = FirebaseDatabase.getInstance().getReference("driversAvailable");
-        GeoFire geoFire = new GeoFire(ref);
-
-        geoFire.setLocation(userId,new GeoLocation(location.getLatitude(),location.getLongitude()));
     }
 
     @Override
     protected void onStop() {
         super.onStop();
 
-        if (FirebaseAuth.getInstance().getCurrentUser() != null) {
-            String userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
-            DatabaseReference ref = FirebaseDatabase.getInstance().getReference("driversAvailable");
-            GeoFire geoFire = new GeoFire(ref);
 
-            geoFire.removeLocation(userId);
-        }
     }
 
     @Override
@@ -140,7 +135,7 @@ public class DriverMapActivity extends GoToScreen2 implements OnMapReadyCallback
             // for ActivityCompat#requestPermissions for more details.
             return;
         }
-        LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, mLocationRequest, DriverMapActivity.this);
+        LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, mLocationRequest, CostumerMapActivity.this);
 
     }
 
@@ -167,7 +162,23 @@ public class DriverMapActivity extends GoToScreen2 implements OnMapReadyCallback
         switch (view.getId()){
             case R.id.logoout:
                 FirebaseAuth.getInstance().signOut();
-                goToScreen(DriverMapActivity.this, MainActivity.class);
+                goToScreen(CostumerMapActivity.this, MainActivity.class);
+                break;
+            case R.id.btnRequest:
+                String userID = FirebaseAuth.getInstance().getCurrentUser().getUid();
+                DatabaseReference ref = FirebaseDatabase.getInstance().getReference("customerRequest");
+                GeoFire geoFire = new GeoFire(ref);
+
+
+                if (mLastLocation != null) {
+                    GeoLocation geoLocation = new GeoLocation(mLastLocation.getLatitude(), mLastLocation.getLongitude());
+                    geoFire.setLocation(userID,geoLocation);
+
+                    pickupLocation = new LatLng(mLastLocation.getLatitude(), mLastLocation.getLongitude());
+                    mMap.addMarker(new MarkerOptions().position(pickupLocation).title(getString(R.string.pickupHere)));
+                    btnRequest.setText(R.string.btnRequestDriver);
+                }
+
                 break;
         }
     }
