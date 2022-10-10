@@ -1,3 +1,11 @@
 <resources>
     <string name="app_name">UberClone</string>
+    <string name="email">Email</string>
+    <string name="password">Password</string>
+    <string name="login">Login</string>
+    <string name="register">Register</string>
+    <string name="signInError">Sign in error</string>
+    <string name="sinUpError">Sign up error</string>
+    <string name="btndriver">I\'m a driver</string>
+    <string name="btnCustomer">I\'m a customer</string>
 </resources>
