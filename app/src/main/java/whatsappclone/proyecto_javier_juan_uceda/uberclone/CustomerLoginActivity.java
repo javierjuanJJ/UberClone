@@ -11,6 +11,8 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import com.firebase.geofire.GeoFire;
+import com.firebase.geofire.GeoLocation;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
@@ -60,6 +62,8 @@ public class CustomerLoginActivity extends GoToScreen implements View.OnClickLis
                 if (user != null) {
                     goToScreen(CustomerLoginActivity.this, CostumerMapActivity.class);
                 }
+
+
             }
         };
     }
