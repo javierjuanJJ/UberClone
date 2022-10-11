@@ -25,6 +25,8 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptor;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
@@ -215,7 +217,7 @@ public class CostumerMapActivity extends GoToScreen2 implements OnMapReadyCallba
                         geoFire.setLocation(userID,geoLocation);
 
                         pickupLocation = new LatLng(mLastLocation.getLatitude(), mLastLocation.getLongitude());
-                        pickupMarker = mMap.addMarker(new MarkerOptions().position(pickupLocation).title(getString(R.string.pickupHere)));
+                        pickupMarker = mMap.addMarker(new MarkerOptions().position(pickupLocation).title(getString(R.string.pickupHere)).icon(BitmapDescriptorFactory.fromResource(R.mipmap.ic_car)));
                         btnRequest.setText(R.string.btnRequestDriver);
                         getClosestDriver();
                     }
@@ -316,7 +318,7 @@ public class CostumerMapActivity extends GoToScreen2 implements OnMapReadyCallba
 
                     btnRequest.setText(distance < 100 ? getString(R.string.btnRequestDriverRate) : String.format(getString(R.string.btnRequestDriverFoundDistance), String.valueOf(distance)));
 
-                    driverMarker = mMap.addMarker(new MarkerOptions().position(driverLatLong).title(getString(R.string.yourDrive)));
+                    driverMarker = mMap.addMarker(new MarkerOptions().icon(BitmapDescriptorFactory.fromResource(R.mipmap.ic_car)).position(driverLatLong).title(getString(R.string.yourDrive)));
 
                 }
             }

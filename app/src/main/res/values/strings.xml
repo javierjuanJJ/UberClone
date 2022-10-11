@@ -11,7 +11,7 @@
     <string name="title_activity_driver_map">DriverMapActivity</string>
     <string name="btnLogout">Logout</string>
     <string name="btnCallUber">Call uber</string>
-    <string name="btnRequestDriver">\"Getting your driver... \"</string>
+    <string name="btnRequestDriver">\"Getting your driver… \"</string>
     <string name="pickupHere">Pickup here</string>
     <string name="btnRequestLookingFor">Looking for the drive ...</string>
     <string name="btnRequestDriverFound">Driver found</string>
