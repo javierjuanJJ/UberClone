@@ -51,7 +51,7 @@ public class CostumerMapActivity extends GoToScreen2 implements OnMapReadyCallba
     private GoogleApiClient mGoogleApiClient;
     private Location mLastLocation;
     private LocationRequest mLocationRequest;
-    private Button btnLogout, btnRequest;
+    private Button btnLogout, btnRequest, btnSettings;
     private LatLng pickupLocation;
     private Marker pickupMarker;
 
@@ -80,6 +80,9 @@ public class CostumerMapActivity extends GoToScreen2 implements OnMapReadyCallba
 
         btnRequest = findViewById(R.id.btnRequest);
         btnRequest.setOnClickListener(this);
+
+        btnSettings = findViewById(R.id.settings);
+        btnSettings.setOnClickListener(this);
 
 
     }
@@ -223,6 +226,10 @@ public class CostumerMapActivity extends GoToScreen2 implements OnMapReadyCallba
                     }
                 }
 
+                break;
+
+            case R.id.settings:
+                goToScreen(CostumerMapActivity.this, CostumerSettingsActivity.class);
                 break;
         }
     }

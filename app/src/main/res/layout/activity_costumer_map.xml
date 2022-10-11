@@ -11,6 +11,13 @@
         android:text="@string/btnLogout"
         android:id="@+id/logoout"/>
 
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/settings"
+        android:id="@+id/settings"
+        android:layout_gravity="right"/>
+
     <androidx.fragment.app.FragmentContainerView
         android:id="@+id/map"
         android:name="com.google.android.gms.maps.SupportMapFragment"
