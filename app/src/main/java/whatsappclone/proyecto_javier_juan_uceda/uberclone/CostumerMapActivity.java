@@ -201,6 +201,7 @@ public class CostumerMapActivity extends GoToScreen2 implements OnMapReadyCallba
                         pickupMarker.remove();
                     }
 
+                    btnRequest.setText(R.string.btnRequestDriver);
 
                 } else {
                     requestApi = true;
