@@ -50,6 +50,7 @@ public class DriverMapActivity extends GoToScreen2 implements OnMapReadyCallback
     private LocationRequest mLocationRequest;
     private Button btnLogout;
     private String customerId = "";
+    private boolean isLoggingOut = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -67,6 +68,8 @@ public class DriverMapActivity extends GoToScreen2 implements OnMapReadyCallback
     }
 
     private void setUI() {
+        isLoggingOut = true;
+
         btnLogout = findViewById(R.id.logoout);
         btnLogout.setOnClickListener(this);
 
@@ -214,16 +217,22 @@ public class DriverMapActivity extends GoToScreen2 implements OnMapReadyCallback
 
     }
 
-    @Override
-    protected void onStop() {
-        super.onStop();
-
+    private void disconnect(){
         if (FirebaseAuth.getInstance().getCurrentUser() != null) {
             String userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
             DatabaseReference ref = FirebaseDatabase.getInstance().getReference("driversAvailable");
             GeoFire geoFire = new GeoFire(ref);
 
             geoFire.removeLocation(userId);
+        }
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+
+        if (!isLoggingOut) {
+            disconnect();
         }
     }
 
@@ -270,6 +279,7 @@ public class DriverMapActivity extends GoToScreen2 implements OnMapReadyCallback
         switch (view.getId()){
             case R.id.logoout:
                 FirebaseAuth.getInstance().signOut();
+                disconnect();
                 goToScreen(DriverMapActivity.this, MainActivity.class);
                 break;
         }
