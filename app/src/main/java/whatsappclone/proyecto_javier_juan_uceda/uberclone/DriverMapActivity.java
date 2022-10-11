@@ -5,14 +5,20 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.app.ActivityCompat;
 import androidx.fragment.app.FragmentActivity;
 
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.request.RequestOptions;
 import com.firebase.geofire.GeoFire;
 import com.firebase.geofire.GeoLocation;
 import com.google.android.gms.common.ConnectionResult;
@@ -51,6 +57,10 @@ public class DriverMapActivity extends GoToScreen2 implements OnMapReadyCallback
     private Button btnLogout;
     private String customerId = "";
     private boolean isLoggingOut = false;
+    private LinearLayout customerLinearLayout;
+    private TextView customerName, customerPhone;
+    private ImageView customerProfilePicture;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -70,6 +80,11 @@ public class DriverMapActivity extends GoToScreen2 implements OnMapReadyCallback
     private void setUI() {
         isLoggingOut = true;
 
+        customerLinearLayout = findViewById(R.id.customerLinearLayout);
+        customerName = findViewById(R.id.customerName);
+        customerPhone = findViewById(R.id.customerPhone);
+        customerProfilePicture = findViewById(R.id.customerProfilePicture);
+
         btnLogout = findViewById(R.id.logoout);
         btnLogout.setOnClickListener(this);
 
@@ -85,6 +100,7 @@ public class DriverMapActivity extends GoToScreen2 implements OnMapReadyCallback
                 if (snapshot.exists()) {
                     customerId = snapshot.getValue().toString();
                     getAssignedCustomerPickupLocation();
+                    getAssignedCustomerInfo();
 
                 }
                 else{
@@ -95,8 +111,46 @@ public class DriverMapActivity extends GoToScreen2 implements OnMapReadyCallback
                     if (assignedCustomerPickupLocationRef != null && assignedCustomerPickupLocationRefListener != null) {
                         assignedCustomerPickupLocationRef.removeEventListener(assignedCustomerPickupLocationRefListener);
                     }
+                    customerLinearLayout.setVisibility(View.GONE);
+                    customerName.setText("");
+                    customerPhone.setText("");
+                    customerProfilePicture.setImageResource(R.mipmap.ic_launcher);
 
+                }
+            }
 
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+
+            }
+        });
+    }
+
+    private void getAssignedCustomerInfo() {
+
+        customerLinearLayout.setVisibility(View.VISIBLE);
+        DatabaseReference mCustomerReference = FirebaseDatabase.getInstance().getReference().child("Users").child("Customers").child(FirebaseAuth.getInstance().getCurrentUser().getUid());
+
+        mCustomerReference.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                Log.i("firebase", String.valueOf(snapshot.exists()));
+                Log.i("firebase", String.valueOf(snapshot.getChildrenCount() > 0));
+                if (snapshot.exists() && snapshot.getChildrenCount() > 0){
+                    Map<String,Object> map = (Map<String, Object>) snapshot.getValue();
+                    if (map.get("name") != null){
+                        customerName.setText(map.get("name").toString());
+                    }
+
+                    if (map.get("phone") != null){
+                        customerPhone.setText(map.get("phone").toString());
+                    }
+
+                    if (map.get("profileImageUrl") != null){
+                        Glide.with(getApplication()).load(map.get("profileImageUrl").toString()).apply(new RequestOptions().override(10, 10)).into(customerProfilePicture);
+
+                    }
+                    Log.i("firebase", "Done");
                 }
             }
 
