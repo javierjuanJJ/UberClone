@@ -16,4 +16,6 @@
     <string name="btnRequestLookingFor">Looking for the drive ...</string>
     <string name="btnRequestDriverFound">Driver found</string>
     <string name="yourDrive">Your drive</string>
+    <string name="btnRequestDriverFoundDistance">Driver found: %s</string>
+    <string name="btnRequestDriverRate">Driver\'s rate</string>
 </resources>

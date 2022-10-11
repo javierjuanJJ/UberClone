@@ -273,6 +273,18 @@ public class CostumerMapActivity extends GoToScreen2 implements OnMapReadyCallba
                         driverMarker.remove();
                     }
 
+                    Location loc1 = new Location("");
+                    loc1.setLatitude(pickupLocation.latitude);
+                    loc1.setLongitude(pickupLocation.longitude);
+
+                    Location loc2 = new Location("");
+                    loc2.setLatitude(driverLatLong.latitude);
+                    loc2.setLongitude(driverLatLong.longitude);
+
+                    float distance = loc1.distanceTo(loc2);
+
+                    btnRequest.setText(distance < 100 ? getString(R.string.btnRequestDriverRate) : String.format(getString(R.string.btnRequestDriverFoundDistance), String.valueOf(distance)));
+
                     driverMarker = mMap.addMarker(new MarkerOptions().position(driverLatLong).title(getString(R.string.yourDrive)));
 
                 }

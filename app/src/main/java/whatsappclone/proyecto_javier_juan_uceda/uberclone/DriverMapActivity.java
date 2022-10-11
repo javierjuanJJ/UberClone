@@ -73,6 +73,26 @@ public class DriverMapActivity extends GoToScreen2 implements OnMapReadyCallback
 
     private void getAssignedCustomer() {
         String driverId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+        DatabaseReference assignedCustomerRef = FirebaseDatabase.getInstance().getReference("Users").child("Drivers").child(driverId).child("customerRiderId");
+        assignedCustomerRef.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                if (snapshot.exists()) {
+                    customerId = snapshot.getValue().toString();
+                    getAssignedCustomerPickupLocation();
+
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+
+            }
+        });
+    }
+
+    private void getAssignedCustomerPickupLocation() {
+        String driverId = FirebaseAuth.getInstance().getCurrentUser().getUid();
         DatabaseReference assignedCustomerPickupLocationRef = FirebaseDatabase.getInstance().getReference("customerRequest").child(driverId).child("1");
 
         assignedCustomerPickupLocationRef.addValueEventListener(new ValueEventListener() {
@@ -107,28 +127,6 @@ public class DriverMapActivity extends GoToScreen2 implements OnMapReadyCallback
             }
         });
 
-    }
-
-    private void getAssignedCustomerPickupLocation() {
-        String driverId = FirebaseAuth.getInstance().getCurrentUser().getUid();
-        DatabaseReference assignedCustomerRef = FirebaseDatabase.getInstance().getReference("Users").child("Drivers").child(driverId);
-        assignedCustomerRef.addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot snapshot) {
-                if (snapshot.exists()) {
-                    Map<String, Object> map = (Map<String, Object>) snapshot.getValue();
-                    if (map.get("customerRiderId") != null){
-                        customerId = map.get("customerRiderId").toString();
-                        getAssignedCustomerPickupLocation();
-                    }
-                }
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError error) {
-
-            }
-        });
     }
 
     /**
