@@ -58,7 +58,7 @@ public class DriverMapActivity extends GoToScreen2 implements OnMapReadyCallback
     private String customerId = "";
     private boolean isLoggingOut = false;
     private LinearLayout customerLinearLayout;
-    private TextView customerName, customerPhone;
+    private TextView customerName, customerPhone, customerDestination;
     private ImageView customerProfilePicture;
 
 
@@ -83,6 +83,7 @@ public class DriverMapActivity extends GoToScreen2 implements OnMapReadyCallback
         customerLinearLayout = findViewById(R.id.customerLinearLayout);
         customerName = findViewById(R.id.customerName);
         customerPhone = findViewById(R.id.customerPhone);
+        customerDestination = findViewById(R.id.customerDestination);
         customerProfilePicture = findViewById(R.id.customerProfilePicture);
 
         btnLogout = findViewById(R.id.logoout);
@@ -93,13 +94,14 @@ public class DriverMapActivity extends GoToScreen2 implements OnMapReadyCallback
 
     private void getAssignedCustomer() {
         String driverId = FirebaseAuth.getInstance().getCurrentUser().getUid();
-        DatabaseReference assignedCustomerRef = FirebaseDatabase.getInstance().getReference("Users").child("Drivers").child(driverId).child("customerRiderId");
+        DatabaseReference assignedCustomerRef = FirebaseDatabase.getInstance().getReference("Users").child("Drivers").child(driverId).child("costumerRequest").child("customerRiderId");
         assignedCustomerRef.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 if (snapshot.exists()) {
                     customerId = snapshot.getValue().toString();
                     getAssignedCustomerPickupLocation();
+                    getAssignedCustomerDestination();
                     getAssignedCustomerInfo();
 
                 }
@@ -115,7 +117,30 @@ public class DriverMapActivity extends GoToScreen2 implements OnMapReadyCallback
                     customerName.setText("");
                     customerPhone.setText("");
                     customerProfilePicture.setImageResource(R.mipmap.ic_launcher);
+                    customerDestination.setText(R.string.tvDestination);
 
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+
+            }
+        });
+    }
+
+    private void getAssignedCustomerDestination() {
+        String driverId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+        DatabaseReference assignedCustomerRef = FirebaseDatabase.getInstance().getReference("Users").child("Drivers").child(driverId).child("costumerRequest").child("customerRiderId");
+        assignedCustomerRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                if (snapshot.exists()) {
+                    String destination = snapshot.getValue().toString();
+                    customerDestination.setText(String.format(getString(R.string.customerDestinationAddress), destination));
+                }
+                else{
+                    customerDestination.setText(R.string.tvDestination);
                 }
             }
 

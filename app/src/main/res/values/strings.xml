@@ -23,4 +23,6 @@
     <string name="etPhone">Phone</string>
     <string name="btnConfirm">Confirm</string>
     <string name="btnBack">Back</string>
+    <string name="tvDestination">Destination</string>
+    <string name="customerDestinationAddress">Destination %s</string>
 </resources>
