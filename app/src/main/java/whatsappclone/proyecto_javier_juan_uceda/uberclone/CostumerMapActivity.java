@@ -51,6 +51,7 @@ public class CostumerMapActivity extends GoToScreen2 implements OnMapReadyCallba
     private LocationRequest mLocationRequest;
     private Button btnLogout, btnRequest;
     private LatLng pickupLocation;
+    private Marker pickupMarker;
 
 
     @Override
@@ -180,19 +181,43 @@ public class CostumerMapActivity extends GoToScreen2 implements OnMapReadyCallba
                 goToScreen(CostumerMapActivity.this, MainActivity.class);
                 break;
             case R.id.btnRequest:
-                String userID = FirebaseAuth.getInstance().getCurrentUser().getUid();
-                DatabaseReference ref = FirebaseDatabase.getInstance().getReference("customerRequest");
-                GeoFire geoFire = new GeoFire(ref);
+                if (requestApi) {
+                    requestApi = false;
+                    geoQuery.removeAllListeners();
+                    driverRef.removeEventListener(driverRefListener);
+                    String userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+                    if (driverFoundID != null){
+                        DatabaseReference driverRef = FirebaseDatabase.getInstance().getReference().child("Users").child("Drivers").child(driverFoundID);
+                        driverRef.setValue(true);
+                        driverFoundID = null;
+                    }
+                    driverFound = true;
+                    radius = 1;
+                    DatabaseReference ref = FirebaseDatabase.getInstance().getReference("customerRequest");
+                    GeoFire geoFire = new GeoFire(ref);
+                    geoFire.removeLocation(userId);
+
+                    if (pickupMarker != null) {
+                        pickupMarker.remove();
+                    }
 
 
-                if (mLastLocation != null) {
-                    GeoLocation geoLocation = new GeoLocation(mLastLocation.getLatitude(), mLastLocation.getLongitude());
-                    geoFire.setLocation(userID,geoLocation);
+                } else {
+                    requestApi = true;
+                    String userID = FirebaseAuth.getInstance().getCurrentUser().getUid();
+                    DatabaseReference ref = FirebaseDatabase.getInstance().getReference("customerRequest");
+                    GeoFire geoFire = new GeoFire(ref);
 
-                    pickupLocation = new LatLng(mLastLocation.getLatitude(), mLastLocation.getLongitude());
-                    mMap.addMarker(new MarkerOptions().position(pickupLocation).title(getString(R.string.pickupHere)));
-                    btnRequest.setText(R.string.btnRequestDriver);
-                    getClosestDriver();
+
+                    if (mLastLocation != null) {
+                        GeoLocation geoLocation = new GeoLocation(mLastLocation.getLatitude(), mLastLocation.getLongitude());
+                        geoFire.setLocation(userID,geoLocation);
+
+                        pickupLocation = new LatLng(mLastLocation.getLatitude(), mLastLocation.getLongitude());
+                        pickupMarker = mMap.addMarker(new MarkerOptions().position(pickupLocation).title(getString(R.string.pickupHere)));
+                        btnRequest.setText(R.string.btnRequestDriver);
+                        getClosestDriver();
+                    }
                 }
 
                 break;
@@ -201,25 +226,27 @@ public class CostumerMapActivity extends GoToScreen2 implements OnMapReadyCallba
     private int radius = 1;
     private boolean driverFound = false;
     private String driverFoundID = "";
-
+    private GeoQuery geoQuery;
 
     private void getClosestDriver() {
         DatabaseReference driverLocation = FirebaseDatabase.getInstance().getReference().child("driverAvailable");
         GeoFire geoFire = new GeoFire(driverLocation);
-        GeoQuery geoQuery = geoFire.queryAtLocation(new GeoLocation(pickupLocation.latitude, pickupLocation.longitude), radius);
+        geoQuery = geoFire.queryAtLocation(new GeoLocation(pickupLocation.latitude, pickupLocation.longitude), radius);
         geoQuery.removeAllListeners();
         geoQuery.addGeoQueryEventListener(new GeoQueryEventListener() {
             @Override
             public void onKeyEntered(String key, GeoLocation location) {
-                driverFound = true;
-                driverFoundID = key;
-                DatabaseReference driverRef = FirebaseDatabase.getInstance().getReference().child("Users").child("Drivers").child(driverFoundID);
-                String customerId = FirebaseAuth.getInstance().getCurrentUser().getUid();
-                HashMap map = new HashMap();
-                map.put("customerRiderId",customerId);
-                driverRef.updateChildren(map);
-                getDriveLocation();
-                btnRequest.setText(R.string.btnRequestLookingFor);
+                if (!driverFound && requestApi) {
+                    driverFound = true;
+                    driverFoundID = key;
+                    DatabaseReference driverRef = FirebaseDatabase.getInstance().getReference().child("Users").child("Drivers").child(driverFoundID);
+                    String customerId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+                    HashMap map = new HashMap();
+                    map.put("customerRiderId",customerId);
+                    driverRef.updateChildren(map);
+                    getDriveLocation();
+                    btnRequest.setText(R.string.btnRequestLookingFor);
+                }
             }
 
             @Override
@@ -248,13 +275,16 @@ public class CostumerMapActivity extends GoToScreen2 implements OnMapReadyCallba
     }
 
     private Marker driverMarker;
+    private boolean requestApi = false;
+    private DatabaseReference driverRef;
+    private ValueEventListener driverRefListener;
 
     private void getDriveLocation() {
-        DatabaseReference driverRef = FirebaseDatabase.getInstance().getReference().child("driversWorking").child(driverFoundID).child("1");
-        driverRef.addValueEventListener(new ValueEventListener() {
+        driverRef = FirebaseDatabase.getInstance().getReference().child("driversWorking").child(driverFoundID).child("1");
+        driverRefListener =  driverRef.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
-                if (snapshot.exists()) {
+                if (snapshot.exists() && requestApi) {
                     List<Object> map = (List<Object>) snapshot.getValue();
                     double locationLat = 0.0;
                     double locationLong = 0.0;
