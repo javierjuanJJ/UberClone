@@ -7,6 +7,7 @@ import androidx.core.app.ActivityCompat;
 import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
 import android.location.Location;
 import android.os.Bundle;
 import android.util.Log;
@@ -36,8 +37,13 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.libraries.places.api.Places;
 import com.google.android.libraries.places.api.model.Place;
+import com.google.android.libraries.places.api.model.TypeFilter;
+import com.google.android.libraries.places.api.net.FetchPhotoRequest;
+import com.google.android.libraries.places.api.net.FetchPhotoResponse;
 import com.google.android.libraries.places.api.net.PlacesClient;
 import com.google.android.libraries.places.widget.AutocompleteSupportFragment;
 import com.google.android.libraries.places.widget.listener.PlaceSelectionListener;
@@ -52,6 +58,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import whatsappclone.proyecto_javier_juan_uceda.uberclone.Utils.GoToScreen2;
 import whatsappclone.proyecto_javier_juan_uceda.uberclone.databinding.ActivityDriverMapBinding;
@@ -176,36 +183,86 @@ public class CostumerMapActivity extends GoToScreen2 implements OnMapReadyCallba
             }
         });
 
+//        // Initialize the SDK
+//        Places.initialize(getApplicationContext(), "AIzaSyByM6InM14crtHJLAWuE-bIeV2LqzZFuZ0");
+//
+//        // Create a new PlacesClient instance
+//        PlacesClient placesClient = Places.createClient(this);
+//
+//        // Initialize the AutocompleteSupportFragment.
+//        AutocompleteSupportFragment autocompleteFragment = (AutocompleteSupportFragment)
+//                getSupportFragmentManager().findFragmentById(R.id.autocomplete_fragment);
+//
+//        // Specify the types of place data to return.
+//        autocompleteFragment.setPlaceFields(Arrays.asList(Place.Field.ID, Place.Field.NAME));
+//
+//        // Set up a PlaceSelectionListener to handle the response.
+//        autocompleteFragment.setOnPlaceSelectedListener(new PlaceSelectionListener() {
+//            @Override
+//            public void onPlaceSelected(@NonNull Place place) {
+//                // TODO: Get info about the selected place.
+//                Log.i("googlePlace", "Place: " + place.getName() + ", " + place.getId());
+//            }
+//
+//
+//            @Override
+//            public void onError(@NonNull Status status) {
+//                // TODO: Handle the error.
+//                Log.i("googlePlace", "An error occurred: " + status);
+//            }
+//        });
+
+        places();
+
+    }
+    PlacesClient placesClient;
+    private void places() {
+
+        String apiKey = "AIzaSyByM6InM14crtHJLAWuE-bIeV2LqzZFuZ0";
         // Initialize the SDK
-        Places.initialize(getApplicationContext(), "AIzaSyByM6InM14crtHJLAWuE-bIeV2LqzZFuZ0");
+        Places.initialize(getApplicationContext(), apiKey);
 
         // Create a new PlacesClient instance
-        PlacesClient placesClient = Places.createClient(this);
+        placesClient = Places.createClient(this);
 
-        // Initialize the AutocompleteSupportFragment.
+
         AutocompleteSupportFragment autocompleteFragment = (AutocompleteSupportFragment)
                 getSupportFragmentManager().findFragmentById(R.id.autocomplete_fragment);
-
-        // Specify the types of place data to return.
-        autocompleteFragment.setPlaceFields(Arrays.asList(Place.Field.ID, Place.Field.NAME));
-
-        // Set up a PlaceSelectionListener to handle the response.
+        autocompleteFragment.setTypeFilter(TypeFilter.CITIES);
+        autocompleteFragment.setPlaceFields(Arrays.asList(Place.Field.ID, Place.Field.NAME, Place.Field.PHOTO_METADATAS));
         autocompleteFragment.setOnPlaceSelectedListener(new PlaceSelectionListener() {
             @Override
             public void onPlaceSelected(@NonNull Place place) {
                 // TODO: Get info about the selected place.
-                Log.i("googlePlace", "Place: " + place.getName() + ", " + place.getId());
-            }
+                Toast.makeText(getApplicationContext(), place.getName(), Toast.LENGTH_SHORT).show();
 
+                FetchPhotoRequest photoRequest = FetchPhotoRequest.builder(Objects.requireNonNull(place.getPhotoMetadatas()).get(0))
+                        .build();
+                placesClient.fetchPhoto(photoRequest).addOnSuccessListener(
+                                new OnSuccessListener<FetchPhotoResponse>() {
+                                    @Override
+                                    public void onSuccess(FetchPhotoResponse response) {
+//                                        Bitmap bitmap = response.getBitmap();
+//                                        ((ImageView)findViewById(R.id.img)).setImageBitmap(bitmap);
+                                    }
+                                })
+                        .addOnFailureListener(new OnFailureListener() {
+                            @Override
+                            public void onFailure(@NonNull Exception exception) {
+                                exception.printStackTrace();
+                            }
+                        });
+            }
 
             @Override
             public void onError(@NonNull Status status) {
                 // TODO: Handle the error.
-                Log.i("googlePlace", "An error occurred: " + status);
+                Toast.makeText(getApplicationContext(), status.toString(), Toast.LENGTH_SHORT).show();
+                Log.e("googlePlaces",status.toString());
             }
         });
-
     }
+
     private int radius = 1;
     private Boolean driverFound = false;
     private String driverFoundID;
