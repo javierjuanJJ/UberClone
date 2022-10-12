@@ -4,10 +4,8 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.app.ActivityCompat;
 
-import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.graphics.Bitmap;
 import android.location.Location;
 import android.os.Bundle;
 import android.util.Log;
@@ -61,7 +59,6 @@ import java.util.Map;
 import java.util.Objects;
 
 import whatsappclone.proyecto_javier_juan_uceda.uberclone.Utils.GoToScreen2;
-import whatsappclone.proyecto_javier_juan_uceda.uberclone.databinding.ActivityDriverMapBinding;
 
 public class CostumerMapActivity extends GoToScreen2 implements OnMapReadyCallback, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, LocationListener, View.OnClickListener {
     private GoogleMap mMap;
@@ -77,7 +74,7 @@ public class CostumerMapActivity extends GoToScreen2 implements OnMapReadyCallba
 
     private Marker pickupMarker;
 
-    private LinearLayout mInfoLayout;
+    private LinearLayout mDriverInfo;
 
     private SupportMapFragment mapFragment;
 
@@ -99,7 +96,7 @@ public class CostumerMapActivity extends GoToScreen2 implements OnMapReadyCallba
             mapFragment.getMapAsync(this);
         }
 
-        mInfoLayout = (LinearLayout) findViewById(R.id.driverInfo);
+        mDriverInfo = (LinearLayout) findViewById(R.id.driverInfo);
 
         mDriverProfileImage = (ImageView) findViewById(R.id.driverProfileImage);
 
@@ -130,12 +127,12 @@ public class CostumerMapActivity extends GoToScreen2 implements OnMapReadyCallba
                     requestBol = false;
                     geoQuery.removeAllListeners();
                     driverLocationRef.removeEventListener(driverLocationRefListener);
-                    driverInfoDatabase.removeEventListener(driverInfoDatabaseListener);
+                    //driverInfoDatabase.removeEventListener(driverInfoDatabaseListener);
 
 
                     if (driverFoundID != null){
-                        DatabaseReference driverRef = FirebaseDatabase.getInstance().getReference().child("Users").child("Drivers").child(driverFoundID);
-                        driverRef.setValue(true);
+                        DatabaseReference driverRef = FirebaseDatabase.getInstance().getReference().child("Users").child("Drivers").child(driverFoundID).child("customerRequest");
+                        driverRef.removeValue();
                         driverFoundID = null;
 
                     }
@@ -154,7 +151,12 @@ public class CostumerMapActivity extends GoToScreen2 implements OnMapReadyCallba
                         mDriverMarker.remove();
                     }
                     mRequest.setText("call Uber");
-                    mInfoLayout.setVisibility(View.GONE);
+
+                    mDriverInfo.setVisibility(View.GONE);
+                    mDriverName.setText("");
+                    mDriverPhone.setText("");
+                    mDriverCar.setText("Destination: --");
+                    mDriverProfileImage.setImageResource(R.mipmap.ic_launcher);
 
                 }else{
                     requestBol = true;
@@ -290,6 +292,7 @@ public class CostumerMapActivity extends GoToScreen2 implements OnMapReadyCallba
                     driverRef.updateChildren(map);
 
                     getDriverLocation();
+                    getDriverInfo();
                     mRequest.setText("Looking for Driver Location....");
 
                 }
@@ -362,7 +365,6 @@ public class CostumerMapActivity extends GoToScreen2 implements OnMapReadyCallba
 
                     mDriverMarker = mMap.addMarker(new MarkerOptions().position(driverLatLng).title("your driver").icon(BitmapDescriptorFactory.fromResource(R.mipmap.ic_car)));
 
-                    getDriverInfo();
                 }
 
             }
@@ -374,15 +376,13 @@ public class CostumerMapActivity extends GoToScreen2 implements OnMapReadyCallba
 
     }
 
-    private DatabaseReference driverInfoDatabase;
-    private ValueEventListener driverInfoDatabaseListener;
     private void getDriverInfo(){
-        driverInfoDatabase= FirebaseDatabase.getInstance().getReference().child("Users").child("Drivers").child(driverFoundID);
-        driverInfoDatabase.keepSynced(true);
-        driverInfoDatabaseListener = driverInfoDatabase.addValueEventListener(new ValueEventListener() {
+        mDriverInfo.setVisibility(View.VISIBLE);
+        DatabaseReference mCustomerDatabase = FirebaseDatabase.getInstance().getReference().child("Users").child("Drivers").child(driverFoundID);
+        mCustomerDatabase.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                if (dataSnapshot.exists()) {
+                if (dataSnapshot.exists() && dataSnapshot.getChildrenCount()>0) {
                     Map<String, Object> map = (Map<String, Object>) dataSnapshot.getValue();
                     String name = "";
                     String phone = "";

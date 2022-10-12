@@ -25,4 +25,5 @@
     <string name="btnBack">Back</string>
     <string name="tvDestination">Destination</string>
     <string name="customerDestinationAddress">Destination %s</string>
+    <string name="etCar">Car</string>
 </resources>

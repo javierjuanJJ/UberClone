@@ -49,12 +49,13 @@ import whatsappclone.proyecto_javier_juan_uceda.uberclone.databinding.ActivityDr
 
 public class DriverMapActivity extends GoToScreen2 implements OnMapReadyCallback, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, LocationListener, View.OnClickListener {
 
+    private static final int LOCATION_REQUEST_CODE = 1;
     private GoogleMap mMap;
     private ActivityDriverMapBinding binding;
     private GoogleApiClient mGoogleApiClient;
     private Location mLastLocation;
     private LocationRequest mLocationRequest;
-    private Button btnLogout;
+    private Button btnLogout, mSettings;
     private String customerId = "";
     private boolean isLoggingOut = false;
     private LinearLayout customerLinearLayout;
@@ -85,6 +86,16 @@ public class DriverMapActivity extends GoToScreen2 implements OnMapReadyCallback
         customerPhone = findViewById(R.id.customerPhone);
         customerDestination = findViewById(R.id.customerDestination);
         customerProfilePicture = findViewById(R.id.customerProfilePicture);
+        mSettings = (Button) findViewById(R.id.settings);
+
+        mSettings.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(DriverMapActivity.this, DriverSettingsActivity.class);
+                startActivity(intent);
+                return;
+            }
+        });
 
         btnLogout = findViewById(R.id.logoout);
         btnLogout.setOnClickListener(this);
@@ -241,6 +252,7 @@ public class DriverMapActivity extends GoToScreen2 implements OnMapReadyCallback
         mMap = googleMap;
 
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(DriverMapActivity.this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, LOCATION_REQUEST_CODE);
             // TODO: Consider calling
             //    ActivityCompat#requestPermissions
             // here to request the missing permissions, and then overriding

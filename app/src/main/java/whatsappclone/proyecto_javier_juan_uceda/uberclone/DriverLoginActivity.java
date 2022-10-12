@@ -90,8 +90,8 @@ public class DriverLoginActivity extends GoToScreen implements View.OnClickListe
                         }
                         else {
                             String userId = mAuth.getCurrentUser().getUid();
-                            DatabaseReference currentUserDB = FirebaseDatabase.getInstance().getReference().child("Users").child("Drivers").child(userId);
-                            currentUserDB.setValue(true);
+                            DatabaseReference current_user_db = FirebaseDatabase.getInstance().getReference().child("Users").child("Drivers").child(userId).child("name");
+                            current_user_db.setValue(email);
                         }
                     }
                 });
