@@ -68,7 +68,7 @@ public class CostumerMapActivity extends GoToScreen2 implements OnMapReadyCallba
     Location mLastLocation;
     LocationRequest mLocationRequest;
     private LatLng destinationLatLng;
-    private Button mLogout, mRequest, mSettings;
+    private Button mLogout, mRequest, mSettings, mHistory;
 
     private LatLng pickupLocation;
 
@@ -115,7 +115,16 @@ public class CostumerMapActivity extends GoToScreen2 implements OnMapReadyCallba
         mLogout = (Button) findViewById(R.id.logout);
         mRequest = (Button) findViewById(R.id.request);
         mSettings = (Button) findViewById(R.id.settings);
-
+        mHistory = (Button) findViewById(R.id.history);
+        mHistory.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(CostumerMapActivity.this, HistoryActivity.class);
+                intent.putExtra("customerOrDriver", "Customers");
+                startActivity(intent);
+                return;
+            }
+        });
         destinationLatLng = new LatLng(0.0,0.0);
 
         mLogout.setOnClickListener(new View.OnClickListener() {
