@@ -19,6 +19,9 @@ import androidx.fragment.app.FragmentActivity;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.RequestOptions;
+import com.directions.route.Route;
+import com.directions.route.RouteException;
+import com.directions.route.RoutingListener;
 import com.firebase.geofire.GeoFire;
 import com.firebase.geofire.GeoLocation;
 import com.google.android.gms.common.ConnectionResult;
@@ -41,13 +44,17 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 import whatsappclone.proyecto_javier_juan_uceda.uberclone.Utils.GoToScreen2;
+import whatsappclone.proyecto_javier_juan_uceda.uberclone.Utils.GoToScreen3;
 import whatsappclone.proyecto_javier_juan_uceda.uberclone.databinding.ActivityDriverMapBinding;
 
-public class DriverMapActivity extends GoToScreen2 implements OnMapReadyCallback, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, LocationListener, View.OnClickListener {
+public class DriverMapActivity extends GoToScreen2 implements
+        OnMapReadyCallback, GoogleApiClient.ConnectionCallbacks,
+        GoogleApiClient.OnConnectionFailedListener, LocationListener, RoutingListener, View.OnClickListener {
 
     private static final int LOCATION_REQUEST_CODE = 1;
     private GoogleMap mMap;
@@ -374,5 +381,30 @@ public class DriverMapActivity extends GoToScreen2 implements OnMapReadyCallback
                 goToScreen(DriverMapActivity.this, MainActivity.class);
                 break;
         }
+    }
+
+    @Override
+    public void onRoutingFailure(RouteException e) {
+
+    }
+
+    @Override
+    public void onRoutingStart() {
+
+    }
+
+    @Override
+    public void onRoutingSuccess(ArrayList<Route> arrayList, int i) {
+
+    }
+
+    @Override
+    public void onRoutingCancelled() {
+
+    }
+
+    @Override
+    public void onPointerCaptureChanged(boolean hasCapture) {
+        super.onPointerCaptureChanged(hasCapture);
     }
 }
