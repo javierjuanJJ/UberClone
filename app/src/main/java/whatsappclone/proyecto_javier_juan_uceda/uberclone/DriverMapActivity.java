@@ -11,6 +11,7 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -19,8 +20,10 @@ import androidx.fragment.app.FragmentActivity;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.RequestOptions;
+import com.directions.route.AbstractRouting;
 import com.directions.route.Route;
 import com.directions.route.RouteException;
+import com.directions.route.Routing;
 import com.directions.route.RoutingListener;
 import com.firebase.geofire.GeoFire;
 import com.firebase.geofire.GeoLocation;
@@ -37,6 +40,8 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.Polyline;
+import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -62,12 +67,17 @@ public class DriverMapActivity extends GoToScreen2 implements
     private GoogleApiClient mGoogleApiClient;
     private Location mLastLocation;
     private LocationRequest mLocationRequest;
-    private Button btnLogout, mSettings;
+    private Button btnLogout, mSettings, mRideStatus;
     private String customerId = "";
     private boolean isLoggingOut = false;
     private LinearLayout customerLinearLayout;
     private TextView customerName, customerPhone, customerDestination;
     private ImageView customerProfilePicture;
+
+    private int status = 0;
+
+    private String destination;
+    private LatLng destinationLatLng;
 
 
     @Override
@@ -87,12 +97,12 @@ public class DriverMapActivity extends GoToScreen2 implements
 
     private void setUI() {
         isLoggingOut = true;
-
-        customerLinearLayout = findViewById(R.id.customerLinearLayout);
+        polylines = new ArrayList<>();
+        customerLinearLayout = findViewById(R.id.customerInfo);
         customerName = findViewById(R.id.customerName);
         customerPhone = findViewById(R.id.customerPhone);
         customerDestination = findViewById(R.id.customerDestination);
-        customerProfilePicture = findViewById(R.id.customerProfilePicture);
+        customerProfilePicture = findViewById(R.id.customerProfileImage);
         mSettings = (Button) findViewById(R.id.settings);
 
         mSettings.setOnClickListener(new View.OnClickListener() {
@@ -104,10 +114,57 @@ public class DriverMapActivity extends GoToScreen2 implements
             }
         });
 
-        btnLogout = findViewById(R.id.logoout);
+        mRideStatus = (Button) findViewById(R.id.rideStatus);
+        mRideStatus.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                switch(status){
+                    case 1:
+                        status=2;
+                        erasePolylines();
+                        if(destinationLatLng.latitude!=0.0 && destinationLatLng.longitude!=0.0){
+                            getRouteToMarker(destinationLatLng);
+                        }
+                        mRideStatus.setText("drive completed");
+
+                        break;
+                    case 2:
+                        endRide();
+                        break;
+                }
+            }
+        });
+
+        btnLogout = findViewById(R.id.logout);
         btnLogout.setOnClickListener(this);
 
         getAssignedCustomer();
+    }
+
+    private void endRide() {
+        mRideStatus.setText("picked customer");
+        erasePolylines();
+
+        String userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+        DatabaseReference driverRef = FirebaseDatabase.getInstance().getReference().child("Users").child("Drivers").child(userId).child("customerRequest");
+        driverRef.removeValue();
+
+        DatabaseReference ref = FirebaseDatabase.getInstance().getReference("customerRequest");
+        GeoFire geoFire = new GeoFire(ref);
+        geoFire.removeLocation(customerId);
+        customerId="";
+
+        if(pickupMarker != null){
+            pickupMarker.remove();
+        }
+        if (assignedCustomerPickupLocationRefListener != null){
+            assignedCustomerPickupLocationRef.removeEventListener(assignedCustomerPickupLocationRefListener);
+        }
+        customerLinearLayout.setVisibility(View.GONE);
+        customerName.setText("");
+        customerPhone.setText("");
+        customerDestination.setText("Destination: --");
+        customerProfilePicture.setImageResource(R.mipmap.ic_launcher);
     }
 
     private void getAssignedCustomer() {
@@ -117,6 +174,7 @@ public class DriverMapActivity extends GoToScreen2 implements
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 if (snapshot.exists()) {
+                    status = 1;
                     customerId = snapshot.getValue().toString();
                     getAssignedCustomerPickupLocation();
                     getAssignedCustomerDestination();
@@ -124,6 +182,7 @@ public class DriverMapActivity extends GoToScreen2 implements
 
                 }
                 else{
+                    erasePolylines();
                     customerId = "";
                     if (pickupMarker != null) {
                         pickupMarker.remove();
@@ -194,6 +253,7 @@ public class DriverMapActivity extends GoToScreen2 implements
 
                     }
                     Log.i("firebase", "Done");
+
                 }
             }
 
@@ -229,10 +289,9 @@ public class DriverMapActivity extends GoToScreen2 implements
                         locationLong = Double.parseDouble(map.get(1).toString());
                     }
 
-                    LatLng driverLatLong = new LatLng(locationLat, locationLong);
-
-                    mMap.addMarker(new MarkerOptions().icon(BitmapDescriptorFactory.fromResource(R.mipmap.ic_pickup)).position(driverLatLong).title(getString(R.string.yourDrive)));
-
+                    LatLng pickupLatLng = new LatLng(locationLat,locationLong);
+                    pickupMarker = mMap.addMarker(new MarkerOptions().position(pickupLatLng).title("pickup location").icon(BitmapDescriptorFactory.fromResource(R.mipmap.ic_pickup)));
+                    getRouteToMarker(pickupLatLng);
 
                 }
             }
@@ -244,6 +303,17 @@ public class DriverMapActivity extends GoToScreen2 implements
         });
 
     }
+
+    private void getRouteToMarker(LatLng pickupLatLng) {
+        Routing routing = new Routing.Builder()
+                .travelMode(AbstractRouting.TravelMode.DRIVING)
+                .withListener(this)
+                .alternativeRoutes(false)
+                .waypoints(new LatLng(mLastLocation.getLatitude(), mLastLocation.getLongitude()), pickupLatLng)
+                .build();
+        routing.execute();
+    }
+
 
     /**
      * Manipulates the map once available.
@@ -375,7 +445,7 @@ public class DriverMapActivity extends GoToScreen2 implements
     @Override
     public void onClick(View view) {
         switch (view.getId()){
-            case R.id.logoout:
+            case R.id.logout:
                 FirebaseAuth.getInstance().signOut();
                 disconnect();
                 goToScreen(DriverMapActivity.this, MainActivity.class);
@@ -383,9 +453,16 @@ public class DriverMapActivity extends GoToScreen2 implements
         }
     }
 
+    private List<Polyline> polylines;
+    private static final int[] COLORS = new int[]{R.color.white};
+
     @Override
     public void onRoutingFailure(RouteException e) {
-
+        if(e != null) {
+            Toast.makeText(this, "Error: " + e.getMessage(), Toast.LENGTH_LONG).show();
+        }else {
+            Toast.makeText(this, "Something went wrong, Try again", Toast.LENGTH_SHORT).show();
+        }
     }
 
     @Override
@@ -395,7 +472,35 @@ public class DriverMapActivity extends GoToScreen2 implements
 
     @Override
     public void onRoutingSuccess(ArrayList<Route> arrayList, int i) {
+        if(polylines.size()>0) {
+            for (Polyline poly : polylines) {
+                poly.remove();
+            }
+        }
 
+        polylines = new ArrayList<>();
+        //add route(s) to the map.
+        for (int counter = 0; counter <arrayList.size(); counter++) {
+
+            //In case of more than 5 alternative routes
+            int colorIndex = counter % COLORS.length;
+
+            PolylineOptions polyOptions = new PolylineOptions();
+            polyOptions.color(getResources().getColor(COLORS[colorIndex]));
+            polyOptions.width(10 + counter * 3);
+            polyOptions.addAll(arrayList.get(counter).getPoints());
+            Polyline polyline = mMap.addPolyline(polyOptions);
+            polylines.add(polyline);
+
+            Toast.makeText(getApplicationContext(),"Route "+ (counter+1) +": distance - "+ arrayList.get(counter).getDistanceValue()+": duration - "+ arrayList.get(counter).getDurationValue(),Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void erasePolylines(){
+        for(Polyline line : polylines){
+            line.remove();
+        }
+        polylines.clear();
     }
 
     @Override
