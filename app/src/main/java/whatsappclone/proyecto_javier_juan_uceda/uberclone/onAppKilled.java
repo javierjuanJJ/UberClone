@@ -11,7 +11,7 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
-class onAppKilled extends Service {
+public class onAppKilled extends Service {
    @Nullable
    @Override
    public IBinder onBind(Intent intent) {
