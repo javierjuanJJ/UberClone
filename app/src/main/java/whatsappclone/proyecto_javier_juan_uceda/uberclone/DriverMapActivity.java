@@ -70,13 +70,14 @@ public class DriverMapActivity extends GoToScreen2 implements
     private GoogleApiClient mGoogleApiClient;
     private Location mLastLocation;
     private LocationRequest mLocationRequest;
-    private Button btnLogout, mSettings, mRideStatus;
+    private Button btnLogout, mSettings, mRideStatus, mHistory;
     private String customerId = "";
     private boolean isLoggingOut = false;
     private LinearLayout customerLinearLayout;
     private TextView customerName, customerPhone, customerDestination;
     private ImageView customerProfilePicture;
     private Switch mWorkingSwitch;
+    private float rideDistance;
 
     private int status = 0;
 
@@ -108,11 +109,22 @@ public class DriverMapActivity extends GoToScreen2 implements
         customerDestination = findViewById(R.id.customerDestination);
         customerProfilePicture = findViewById(R.id.customerProfileImage);
         mSettings = (Button) findViewById(R.id.settings);
+        mHistory = (Button) findViewById(R.id.history);
 
         mSettings.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Intent intent = new Intent(DriverMapActivity.this, DriverSettingsActivity.class);
+                startActivity(intent);
+                return;
+            }
+        });
+
+        mHistory.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(DriverMapActivity.this, HistoryActivity.class);
+                intent.putExtra("customerOrDriver", "Drivers");
                 startActivity(intent);
                 return;
             }
@@ -184,6 +196,7 @@ public class DriverMapActivity extends GoToScreen2 implements
         map.put("location/from/lng", pickupLatLng.longitude);
         map.put("location/to/lat", destinationLatLng.latitude);
         map.put("location/to/lng", destinationLatLng.longitude);
+        map.put("distance", rideDistance);
         historyRef.child(requestId).updateChildren(map);
     }
 
@@ -204,6 +217,7 @@ public class DriverMapActivity extends GoToScreen2 implements
         GeoFire geoFire = new GeoFire(ref);
         geoFire.removeLocation(customerId);
         customerId="";
+        rideDistance = 0;
 
         if(pickupMarker != null){
             pickupMarker.remove();
@@ -356,13 +370,15 @@ public class DriverMapActivity extends GoToScreen2 implements
     }
 
     private void getRouteToMarker(LatLng pickupLatLng) {
-        Routing routing = new Routing.Builder()
-                .travelMode(AbstractRouting.TravelMode.DRIVING)
-                .withListener(this)
-                .alternativeRoutes(false)
-                .waypoints(new LatLng(mLastLocation.getLatitude(), mLastLocation.getLongitude()), pickupLatLng)
-                .build();
-        routing.execute();
+        if (pickupLatLng != null && mLastLocation != null) {
+            Routing routing = new Routing.Builder()
+                    .travelMode(AbstractRouting.TravelMode.DRIVING)
+                    .withListener(this)
+                    .alternativeRoutes(false)
+                    .waypoints(new LatLng(mLastLocation.getLatitude(), mLastLocation.getLongitude()), pickupLatLng)
+                    .build();
+            routing.execute();
+        }
     }
 
 
@@ -404,7 +420,10 @@ public class DriverMapActivity extends GoToScreen2 implements
     @Override
     public void onLocationChanged(@NonNull Location location) {
         if (getApplicationContext() != null) {
-            mLastLocation = location;
+
+            if(!customerId.equals("") && mLastLocation!=null && location != null){
+                rideDistance += mLastLocation.distanceTo(location)/1000;
+            }
 
             LatLng latLng = new LatLng(location.getLatitude(),location.getLongitude());
             mMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));

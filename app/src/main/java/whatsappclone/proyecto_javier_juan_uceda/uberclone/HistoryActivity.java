@@ -6,6 +6,8 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import android.os.Bundle;
 import android.text.format.DateFormat;
+import android.view.View;
+import android.widget.TextView;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
@@ -25,12 +27,17 @@ public class HistoryActivity extends AppCompatActivity {
     private RecyclerView mHistoryRecyclerView;
     private RecyclerView.Adapter mHistoryAdapter;
     private RecyclerView.LayoutManager mHistoryLayoutManager;
+    private TextView mBalance;
+
+    private Double Balance = 0.0;
 
     private String customerOrDriver, userId;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_history);
+
+        mBalance = findViewById(R.id.balance);
 
         mHistoryRecyclerView = (RecyclerView) findViewById(R.id.historyRecyclerView);
         mHistoryRecyclerView.setNestedScrollingEnabled(false);
@@ -43,6 +50,10 @@ public class HistoryActivity extends AppCompatActivity {
         customerOrDriver = getIntent().getExtras().getString("customerOrDriver");
         userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
         getUserHistoryIds();
+
+        if(customerOrDriver.equals("Drivers")){
+            mBalance.setVisibility(View.VISIBLE);
+        }
     }
 
     private void getUserHistoryIds() {
@@ -70,9 +81,19 @@ public class HistoryActivity extends AppCompatActivity {
                 if(dataSnapshot.exists()){
                     String rideId = dataSnapshot.getKey();
                     Long timestamp = 0L;
-                    for(DataSnapshot child : dataSnapshot.getChildren()){
-                        if (child.getKey().equals("timestamp")){
-                            timestamp = Long.valueOf(child.getValue().toString());
+                    String distance = "";
+                    Double ridePrice = 0.0;
+
+                    if(dataSnapshot.child("timestamp").getValue() != null){
+                        timestamp = Long.valueOf(dataSnapshot.child("timestamp").getValue().toString());
+                    }
+
+                    if(dataSnapshot.child("customerPaid").getValue() != null && dataSnapshot.child("driverPaidOut").getValue() == null){
+                        if(dataSnapshot.child("distance").getValue() != null){
+                            distance = dataSnapshot.child("distance").getValue().toString();
+                            ridePrice = (Double.valueOf(distance) * 0.4);
+                            Balance += ridePrice;
+                            mBalance.setText("Balance: " + String.valueOf(Balance) + " $");
                         }
                     }
                     HistoryObject obj = new HistoryObject(rideId, getDate(timestamp));

@@ -2,9 +2,12 @@ package whatsappclone.proyecto_javier_juan_uceda.uberclone;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.app.Activity;
+import android.content.Intent;
 import android.os.Bundle;
 import android.text.format.DateFormat;
 import android.view.View;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.RatingBar;
 import android.widget.TextView;
@@ -33,7 +36,16 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.paypal.android.sdk.payments.PayPalConfiguration;
+import com.paypal.android.sdk.payments.PayPalPayment;
+import com.paypal.android.sdk.payments.PayPalService;
+import com.paypal.android.sdk.payments.PaymentActivity;
+import com.paypal.android.sdk.payments.PaymentConfirmation;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
@@ -57,10 +69,12 @@ public class HistorySingleActivity extends AppCompatActivity implements OnMapRea
 
     private LatLng destinationLatLng, pickupLatLng;
 
-
+    private Button mPay;
+    private String distance;
+    private Double ridePrice;
 
     private RatingBar mRatingBar;
-
+    private Boolean customerPaid = false;
 
 
     private DatabaseReference historyRideInfoDb;
@@ -69,6 +83,13 @@ public class HistorySingleActivity extends AppCompatActivity implements OnMapRea
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_history_single);
+
+        Intent intent = new Intent(this, PayPalService.class);
+        intent.putExtra(PayPalService.EXTRA_PAYPAL_CONFIGURATION, config);
+        startService(intent);
+
+        mPay = findViewById(R.id.pay);
+
         polylines = new ArrayList<>();
 
         rideId = getIntent().getExtras().getString("rideId");
@@ -122,6 +143,16 @@ public class HistorySingleActivity extends AppCompatActivity implements OnMapRea
                             mRatingBar.setRating(Integer.valueOf(child.getValue().toString()));
 
                         }
+                        if (child.getKey().equals("customerPaid")){
+                            customerPaid =true;
+                        }
+
+                        if (child.getKey().equals("distance")){
+                            distance = child.getValue().toString();
+                            rideDistance.setText(distance.substring(0, Math.min(distance.length(), 5)) + " km");
+                            ridePrice = Double.valueOf(distance) * 0.5;
+
+                        }
                         if (child.getKey().equals("destination")){
                             rideLocation.setText(child.getValue().toString());
                         }
@@ -145,6 +176,7 @@ public class HistorySingleActivity extends AppCompatActivity implements OnMapRea
 
 
         mRatingBar.setVisibility(View.VISIBLE);
+        mPay.setVisibility(View.VISIBLE);
         mRatingBar.setOnRatingBarChangeListener(new RatingBar.OnRatingBarChangeListener() {
             @Override
             public void onRatingChanged(RatingBar ratingBar, float rating, boolean fromUser) {
@@ -153,6 +185,68 @@ public class HistorySingleActivity extends AppCompatActivity implements OnMapRea
                 mDriverRatingDb.child(rideId).setValue(rating);
             }
         });
+        if(customerPaid){
+            mPay.setEnabled(false);
+        }else{
+            mPay.setEnabled(true);
+        }
+        mPay.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                payPalPayment();
+            }
+        });
+    }
+
+    private int PAYPAL_REQUEST_CODE = 1;
+    private static PayPalConfiguration config = new PayPalConfiguration()
+            .environment(PayPalConfiguration.ENVIRONMENT_SANDBOX)
+            .clientId("AUQ_1JpdB75sNsHNPUAT4R3aV333uD3_9VUkeCLJ2YZUGpjHk7DLoL3mfUjmXTBlAiON0rZBULPNlFSH");
+
+    private void payPalPayment() {
+        PayPalPayment payment = new PayPalPayment(new BigDecimal(ridePrice), "USD", "Uber Ride",
+                PayPalPayment.PAYMENT_INTENT_SALE);
+
+        Intent intent = new Intent(this, PaymentActivity.class);
+
+        intent.putExtra(PayPalService.EXTRA_PAYPAL_CONFIGURATION, config);
+        intent.putExtra(PaymentActivity.EXTRA_PAYMENT, payment);
+
+        startActivityForResult(intent, PAYPAL_REQUEST_CODE);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == PAYPAL_REQUEST_CODE){
+            if(resultCode == Activity.RESULT_OK){
+                PaymentConfirmation confirm = data.getParcelableExtra(PaymentActivity.EXTRA_RESULT_CONFIRMATION);
+                if(confirm != null){
+                    try{
+                        JSONObject jsonObj = new JSONObject(confirm.toJSONObject().toString());
+
+                        String paymentResponse = jsonObj.getJSONObject("response").getString("state");
+
+                        if(paymentResponse.equals("approved")){
+                            Toast.makeText(getApplicationContext(), "Payment successful", Toast.LENGTH_LONG).show();
+                            historyRideInfoDb.child("customerPaid").setValue(true);
+                            mPay.setEnabled(false);
+                        }
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                }
+
+            }else{
+                Toast.makeText(getApplicationContext(), "Payment unsuccessful", Toast.LENGTH_LONG).show();
+            }
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        stopService(new Intent(this, PayPalService.class));
+        super.onDestroy();
     }
 
     private void getUserInformation(String otherUserDriverOrCustomer, String otherUserId) {
