@@ -15,6 +15,7 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
+import android.widget.RatingBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -86,7 +87,7 @@ public class CostumerMapActivity extends GoToScreen2 implements OnMapReadyCallba
     private String destination, requestService;
 
     private RadioGroup mRadioGroup;
-
+    private RatingBar mRatingBar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -116,6 +117,9 @@ public class CostumerMapActivity extends GoToScreen2 implements OnMapReadyCallba
         mRequest = (Button) findViewById(R.id.request);
         mSettings = (Button) findViewById(R.id.settings);
         mHistory = (Button) findViewById(R.id.history);
+        mRatingBar = (RatingBar) findViewById(R.id.ratingBar);
+
+
         mHistory.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -465,26 +469,29 @@ public class CostumerMapActivity extends GoToScreen2 implements OnMapReadyCallba
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 if (dataSnapshot.exists() && dataSnapshot.getChildrenCount()>0) {
-                    Map<String, Object> map = (Map<String, Object>) dataSnapshot.getValue();
-                    String name = "";
-                    String phone = "";
-                    String car = "";
-                    String profileImageURL = "default";
-                    if (map.get("name") != null) {
-                        name = map.get("name").toString();
-                        mDriverName.setText(name);
+                    if(dataSnapshot.child("name")!=null){
+                        mDriverName.setText(dataSnapshot.child("name").getValue().toString());
                     }
-                    if (map.get("phone") != null) {
-                        phone = map.get("phone").toString();
-                        mDriverPhone.setText(phone);
+                    if(dataSnapshot.child("phone")!=null){
+                        mDriverPhone.setText(dataSnapshot.child("phone").getValue().toString());
                     }
-                    if (map.get("car") != null) {
-                        car = map.get("car").toString();
-                        mDriverCar.setText(car);
+                    if(dataSnapshot.child("car")!=null){
+                        mDriverCar.setText(dataSnapshot.child("car").getValue().toString());
                     }
-                    if (map.get("profileImageURL") != null) {
-                        profileImageURL = map.get("profileImageURL").toString();
-                        Glide.with(getApplication()).load(profileImageURL).into(mDriverProfileImage);
+                    if(dataSnapshot.child("profileImageUrl")!=null){
+                        Glide.with(getApplication()).load(dataSnapshot.child("profileImageUrl").getValue().toString()).into(mDriverProfileImage);
+                    }
+
+                    int ratingSum = 0;
+                    float ratingsTotal = 0;
+                    float ratingsAvg = 0;
+                    for (DataSnapshot child : dataSnapshot.child("rating").getChildren()){
+                        ratingSum = ratingSum + Integer.valueOf(child.getValue().toString());
+                        ratingsTotal++;
+                    }
+                    if(ratingsTotal!= 0){
+                        ratingsAvg = ratingSum/ratingsTotal;
+                        mRatingBar.setRating(ratingsAvg);
                     }
                 }
             }

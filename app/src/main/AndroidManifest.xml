@@ -93,6 +93,7 @@
                 android:name="android.app.lib_name"
                 android:value="" />
         </activity>
+        <service android:name=".onAppKilled" android:stopWithTask="false"/>
         <activity
             android:name=".MainActivity"
             android:exported="true">

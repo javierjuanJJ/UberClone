@@ -24,8 +24,10 @@ public class MainActivity extends GoToScreen implements View.OnClickListener {
         btnCustomer = findViewById(R.id.customer);
         btnDriver = findViewById(R.id.driver);
 
+        startService(new Intent(MainActivity.this, onAppKilled.class));
         btnCustomer.setOnClickListener(this);
         btnDriver.setOnClickListener(this);
+
     }
 
     @Override
