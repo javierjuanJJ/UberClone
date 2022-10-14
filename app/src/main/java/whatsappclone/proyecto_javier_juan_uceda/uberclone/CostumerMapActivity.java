@@ -63,6 +63,7 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -543,12 +544,68 @@ public class CostumerMapActivity extends GoToScreen2 implements OnMapReadyCallba
 
                     LatLng latLng = new LatLng(location.getLatitude(),location.getLongitude());
 
-                    mMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
-                    mMap.animateCamera(CameraUpdateFactory.zoomTo(11));
+                    //mMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
+                    //mMap.animateCamera(CameraUpdateFactory.zoomTo(11));
+                    if(!getDriversAroundStarted)
+                        getDriversAround();
                 }
             }
         }
     };
+
+    boolean getDriversAroundStarted = false;
+    List<Marker> markers = new ArrayList<Marker>();
+
+    private void getDriversAround(){
+        getDriversAroundStarted = true;
+        DatabaseReference driverLocation = FirebaseDatabase.getInstance().getReference().child("driversAvailable");
+
+        GeoFire geoFire = new GeoFire(driverLocation);
+        GeoQuery geoQuery = geoFire.queryAtLocation(new GeoLocation(mLastLocation.getLongitude(), mLastLocation.getLatitude()), 999999999);
+
+        geoQuery.addGeoQueryEventListener(new GeoQueryEventListener() {
+            @Override
+            public void onKeyEntered(String key, GeoLocation location) {
+                for(Marker markerIt : markers){
+                    if(markerIt.getTag().equals(key))
+                        return;
+                }
+
+                LatLng driverLocation = new LatLng(location.latitude, location.longitude);
+
+                Marker mDriverMarker = mMap.addMarker(new MarkerOptions().position(driverLocation).title(key).icon(BitmapDescriptorFactory.fromResource(R.mipmap.ic_car)));
+                mDriverMarker.setTag(key);
+
+                markers.add(mDriverMarker);
+            }
+
+            @Override
+            public void onKeyExited(String key) {
+                for(Marker markerIt : markers){
+                    if(markerIt.getTag().equals(key)){
+                        markerIt.remove();
+                    }
+                }
+            }
+
+            @Override
+            public void onKeyMoved(String key, GeoLocation location) {
+
+            }
+
+            @Override
+            public void onGeoQueryReady() {
+
+            }
+
+            @Override
+            public void onGeoQueryError(DatabaseError error) {
+
+            }
+        });
+
+    }
+
 
     private void checkLocationPermission() {
         if(ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED){
